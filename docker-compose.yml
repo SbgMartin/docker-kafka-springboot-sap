@@ -1,4 +1,4 @@
-version: '2'
+version: '3.3'
 services:
   zookeeper:
     image: wurstmeister/zookeeper
@@ -18,3 +18,41 @@ services:
     build: ./KafkaREST/
     ports:
       - "8080:8080"  
+  elastic:
+    image: docker.elastic.co/elasticsearch/elasticsearch:5.6.3
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      - discovery.type=single-node
+    volumes:
+      - type: volume
+        source: elastic-vol
+        target: /usr/share/elasticsearch/data
+  kibana:
+    image: docker.elastic.co/kibana/kibana:5.6.3
+    ports:
+      - "5601:5601"
+    environment:
+      SERVER_NAME: 192.168.99.100
+      ELASTICSEARCH_URL: http://192.168.99.100:9200
+      ELASTICSEARCH_USERNAME: elastic
+      ELASTICSEARCH_PASSWORD: changeme
+    volumes:
+      - type: volume
+        source: kibana-vol
+        target: /data
+  logstash:
+    image: docker.elastic.co/logstash/logstash:5.6.3
+    volumes:
+     - ~/pipeline/:/usr/share/logstash/pipeline/ 
+  dockbeat:
+    image: ingensi/dockbeat:latest
+    volumes:
+     - /var/run/docker.sock:/var/run/docker.sock
+     - /Users/SbgMartin/git/docker-kafka-springboot-sap/elkstack/dockbeat/:/etc/dockbeat
+volumes:
+  kibana-vol:
+    driver: local
+  elastic-vol:
+    driver: local
